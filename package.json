@@ -1,0 +1,14 @@
+{
+  "name": "smythe-ai",
+  "version": "1.0.0",
+  "description": "AI assistant web app for Smythe University College",
+  "main": "index.js",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "formidable": "^2.1.1",
+    "node-fetch": "^3.3.2"
+  },
+  "type": "module"
+}
