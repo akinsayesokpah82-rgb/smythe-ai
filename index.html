@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smythe University College AI</title>
+<style>
+:root {--bg:#f1f5f9;--card:#fff;--primary:#1e40af;--accent:#d97706;--text:#111827;--muted:#6b7280;}
+[data-theme="dark"] {--bg:#111827;--card:#1f2937;--text:#f3f4f6;--muted:#9ca3af;}
+body{margin:0;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;background:var(--bg);color:var(--text);height:100vh;padding:20px;}
+h1{color:var(--primary);margin-bottom:10px;}
+#controls{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;}
+button{cursor:pointer;background:var(--primary);color:#fff;border:none;transition:0.3s;}
+button:hover{background:#1b3a96;}
+#chat-container{flex:1;width:100%;max-width:800px;display:flex;flex-direction:column;}
+#chat{flex:1;overflow-y:auto;padding:15px;background:var(--card);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:10px;}
+.message{margin:10px 0;line-height:1.5;white-space:pre-wrap;position:relative;padding:5px 10px;border-radius:8px;}
+.user{color:var(--primary);font-weight:bold;background:rgba(30,64,175,0.1);align-self:flex-end;}
+.ai{color:var(--accent);font-weight:bold;background:rgba(217,119,6,0.1);align-self:flex-start;}
+.copy-btn{position:absolute;top:5px;right:5px;font-size:10px;cursor:pointer;color:var(--muted);}
+#typing{font-style:italic;color:var(--muted);margin-bottom:5px;}
+#input-container{display:flex;width:100%;max-width:800px;gap:5px;align-items:flex-end;}
+#user-input{flex:1;resize:none;padding:10px;font-size:16px;border-radius:8px;border:1px solid #ccc;outline:none;}
+.utility{background:var(--accent);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;}
+.utility:hover{opacity:0.8;}
+.file-preview{margin-top:5px;max-width:100%;border-radius:8px;}
+</style>
+</head>
+<body data-theme="light">
+
+<h1>Smythe University College AI</h1>
+
+<div id="controls">
+  <select id="model-select">
+    <option value="gpt-4">GPT-4</option>
+    <option value="gpt-3.5">GPT-3.5</option>
+    <option value="gemini">Gemini</option>
+    <option value="nano">Nano Banana</option>
+  </select>
+  <button onclick="toggleTheme()">Toggle Dark/Light</button>
+  <button class="utility" onclick="clearChat()">Clear Chat</button>
+  <button class="utility" onclick="downloadChat()">Download Chat</button>
+  <input type="file" id="file-upload" multiple title="Upload files (text, image, audio, video)">
+</div>
+
+<div id="chat-container">
+  <div id="chat"></div>
+  <div id="typing"></div>
+</div>
+
+<div id="input-container">
+  <textarea id="user-input" rows="1" placeholder="Ask me anything..."></textarea>
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+const chat=document.getElementById('chat');
+const typing=document.getElementById('typing');
+const userInput=document.getElementById('user-input');
+const modelSelect=document.getElementById('model-select');
+const fileUpload=document.getElementById('file-upload');
+
+let chatHistory=JSON.parse(localStorage.getItem('smytheChat'))||[];
+chatHistory.forEach(m=>appendMessage(m.sender,m.text,m.files));
+
+function appendMessage(sender,text,files=[]){
+  const div=document.createElement('div');
+  div.className='message '+sender;
+  div.innerHTML=`${sender==='user'?'You':'AI'}: ${text||''}`;
+  if(files.length){
+    files.forEach(f=>{
+      const ext=f.name.split('.').pop().toLowerCase();
+      if(['png','jpg','jpeg','gif'].includes(ext)){
+        const img=document.createElement('img'); img.src=URL.createObjectURL(f); img.className='file-preview'; div.appendChild(img);
+      }else if(['mp3','wav'].includes(ext)){
+        const audio=document.createElement('audio'); audio.controls=true; audio.src=URL.createObjectURL(f); audio.className='file-preview'; div.appendChild(audio);
+      }else if(['mp4','webm'].includes(ext)){
+        const video=document.createElement('video'); video.controls=true; video.src=URL.createObjectURL(f); video.className='file-preview'; div.appendChild(video);
+      }else{
+        const p=document.createElement('p'); p.textContent=`File: ${f.name}`; div.appendChild(p);
+      }
+    });
+  }
+  chat.appendChild(div); chat.scrollTop=chat.scrollHeight;
+  chatHistory.push({sender,text,files});
+  localStorage.setItem('smytheChat',JSON.stringify(chatHistory));
+}
+
+function toggleTheme(){const theme=document.body.getAttribute('data-theme');document.body.setAttribute('data-theme',theme==='light'?'dark':'light');}
+function clearChat(){chat.innerHTML='';chatHistory=[];localStorage.removeItem('smytheChat');}
+function downloadChat(){const blob=new Blob([chatHistory.map(m=>`${m.sender==='user'?'You':'AI'}: ${m.text||''}`).join('\n')],{type:'text/plain'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='chat.txt';a.click();URL.revokeObjectURL(url);}
+
+async function sendMessage(){
+  const message=userInput.value.trim();
+  if(!message && fileUpload.files.length===0) return;
+  const files=[...fileUpload.files];
+  appendMessage('user',message,files);
+  userInput.value=''; fileUpload.value=''; typing.textContent='AI is typing...';
+
+  try{
+    const formData=new FormData();
+    formData.append('prompt',message);
+    formData.append('model',modelSelect.value);
+    files.forEach(f=>formData.append('files',f));
+    const res=await fetch('YOUR_SERVER_ENDPOINT',{method:'POST',body:formData});
+    const data=await res.json();
+    appendMessage('ai',data.reply);
+  }catch(err){appendMessage('ai','Error: Unable to get response.');console.error(err);}
+  finally{typing.textContent='';}
+}
+
+userInput.addEventListener('keypress',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
+</script>
+</body>
+</html>
