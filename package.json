@@ -4,7 +4,7 @@
   "description": "AI assistant web app for Smythe University College",
   "main": "index.js",
   "scripts": {
-    "start": "vercel dev"
+    "start": "netlify dev"
   },
   "dependencies": {
     "formidable": "^2.1.1",
