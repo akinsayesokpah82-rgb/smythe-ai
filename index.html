@@ -104,13 +104,8 @@ async function sendMessage(){
     formData.append('model',modelSelect.value);
     files.forEach(f=>formData.append('files',f));
 
-    // === CHANGE THIS URL BASED ON DEPLOYMENT ===
-    // Vercel:
-    // const res=await fetch('https://smythe-ai.vercel.app/api/chat', { method:'POST', body: formData });
-    // Netlify:
-    // const res=await fetch('/.netlify/functions/chat', { method:'POST', body: formData });
-
-    const res=await fetch('/api/chat', { method:'POST', body: formData }); 
+    // For Netlify
+    const res=await fetch('/.netlify/functions/chat', { method:'POST', body: formData });
     const data=await res.json();
     appendMessage('ai',data.reply);
   }catch(err){appendMessage('ai','Error: Unable to get response.');console.error(err);}
