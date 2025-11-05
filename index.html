@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smythe University College AI</title>
 <style>
-:root {--bg:#f1f5f9;--card:#fff;--primary:#1e40af;--accent:#d97706;--text:#111827;--muted:#6b7280;}
-[data-theme="dark"] {--bg:#111827;--card:#1f2937;--text:#f3f4f6;--muted:#9ca3af;}
+:root{--bg:#f1f5f9;--card:#fff;--primary:#1e40af;--accent:#d97706;--text:#111827;--muted:#6b7280;}
+[data-theme="dark"]{--bg:#111827;--card:#1f2937;--text:#f3f4f6;--muted:#9ca3af;}
 body{margin:0;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;background:var(--bg);color:var(--text);height:100vh;padding:20px;}
 h1{color:var(--primary);margin-bottom:10px;}
 #controls{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
@@ -103,7 +103,14 @@ async function sendMessage(){
     formData.append('prompt',message);
     formData.append('model',modelSelect.value);
     files.forEach(f=>formData.append('files',f));
-    const res=await fetch('YOUR_SERVER_ENDPOINT',{method:'POST',body:formData});
+
+    // === CHANGE THIS URL BASED ON DEPLOYMENT ===
+    // Vercel:
+    // const res=await fetch('https://smythe-ai.vercel.app/api/chat', { method:'POST', body: formData });
+    // Netlify:
+    // const res=await fetch('/.netlify/functions/chat', { method:'POST', body: formData });
+
+    const res=await fetch('/api/chat', { method:'POST', body: formData }); 
     const data=await res.json();
     appendMessage('ai',data.reply);
   }catch(err){appendMessage('ai','Error: Unable to get response.');console.error(err);}
