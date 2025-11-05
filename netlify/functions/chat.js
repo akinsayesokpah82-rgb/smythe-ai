@@ -50,4 +50,8 @@ export default async function handler(event, context) {
         resolve({ statusCode:200, body: JSON.stringify({ reply }) });
 
       } catch(error){
-        console.error(error
+        console.error(error resolve({ statusCode:500, body: JSON.stringify({ error:'AI request failed' }) });
+      }
+    });
+  });
+}
